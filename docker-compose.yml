@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+
+  # PostgreSQL database
+  db:
+    image: postgres:15-alpine
+    container_name: interview_prep_db
+    environment:
+      POSTGRES_DB: interview_prep
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: harshi
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot backend
+  backend:
+    build: .
+    container_name: interview_prep_backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/interview_prep
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: harshi
+      JWT_SECRET: MySuperSecretKeyForJWTSigning2024!!
+      GROQ_API_KEY: ${GROQ_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
